@@ -1,0 +1,23 @@
+// fixtures.ts
+import { test as baseTest } from '@playwright/test';
+import { primeLoginPage } from './primeLoginPage';
+
+type MyFixtures = {
+  loggedInPage: typeof baseTest extends { page: infer P } ? P : never;
+};
+
+export const test = baseTest.extend<MyFixtures>({
+  loggedInPage: async ({ page }, use, testInfo) => {
+    const loginPage = new primeLoginPage(page);
+
+    // Set credentials
+    const orgCode = 'ORG123';
+    const username = 'testuser';
+    const password = 'password123';
+
+    await loginPage.LoginMBPapplication(orgCode, username, password, testInfo);
+    await use(page);
+  },
+});
+
+export { expect } from '@playwright/test';
