@@ -1,23 +1,48 @@
-// fixtures.ts
-import { test as baseTest } from '@playwright/test';
-import { primeLoginPage } from './primeLoginPage';
+import { test, expect, Page } from '@playwright/test';
+import { primeLoginPage } from './loginpage';
+import { SearchCustomer } from './searchcustomerpage';
 
-type MyFixtures = {
-  loggedInPage: typeof baseTest extends { page: infer P } ? P : never;
-};
+// Shared credentials
+const orgCode = 'PCST2';
+const username = 'e3026913';
+const password = 'install';
 
-export const test = baseTest.extend<MyFixtures>({
-  loggedInPage: async ({ page }, use, testInfo) => {
-    const loginPage = new primeLoginPage(page);
+test.describe('Login and Search Tests', () => {
+    let page: Page;
 
-    // Set credentials
-    const orgCode = 'ORG123';
-    const username = 'testuser';
-    const password = 'password123';
+    test.beforeAll(async ({ browser }) => {
+        // Launch browser once for all tests
+        page = await browser.newPage();
+        
+        // Perform login once
+        const loginPage = new primeLoginPage(page);
+        await loginPage.LoginMBPapplication(orgCode, username, password, test.info());
+    });
 
-    await loginPage.LoginMBPapplication(orgCode, username, password, testInfo);
-    await use(page);
-  },
+    test.afterAll(async () => {
+        // Close browser after all tests
+        await page.close();
+    });
+
+    test('Verify page title after login', async () => {
+        // Verify the page title
+        await expect(page.locator('text=Logoff')).toBeVisible();
+    });
+
+    test("Verify customer search functionality", async () => {
+        // Create search customer instance
+        const searchCustomer = new SearchCustomer(page);
+        
+        // Perform the customer search
+        const popup = await searchCustomer.searchCustomerById();
+        
+        // Verify the popup is opened successfully
+        expect(popup).not.toBeNull();
+        const popupTitle = await popup.title();
+        console.log(`Popup title: ${popupTitle}`);
+        expect(popupTitle).toBeTruthy();
+        
+        // Close the popup
+        await popup.close();
+    });
 });
-
-export { expect } from '@playwright/test';
