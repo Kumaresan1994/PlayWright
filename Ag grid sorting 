@@ -1,0 +1,27 @@
+public GlobalSearchPage verifySorting(String columnId, boolean ascending) {
+    List<WebElement> rows = locateElements(Locators.XPATH, "//div[@col-id='" + columnId + "']//span[@class='ag-cell-value']");
+    
+    // Get values before sort
+    List<String> valuesBeforeSort = new ArrayList<>();
+    for (WebElement row : rows) {
+        valuesBeforeSort.add(row.getText());
+    }
+
+    // Copy values and sort
+    List<String> sortedValues = new ArrayList<>(valuesBeforeSort);
+    if (ascending) {
+        Collections.sort(sortedValues);
+    } else {
+        Collections.sort(sortedValues, Collections.reverseOrder());
+    }
+
+    if (valuesBeforeSort.equals(sortedValues)) {
+        reportStep("Column '" + columnId + "' sorted correctly in " + (ascending ? "ascending" : "descending") + " order.", "pass");
+    } else if (new HashSet<>(valuesBeforeSort).equals(new HashSet<>(sortedValues))) {
+        reportStep("Column '" + columnId + "' values unchanged - grid might not have sorted.", "fail");
+    } else {
+        reportStep("Column '" + columnId + "' not sorted correctly in " + (ascending ? "ascending" : "descending") + " order.", "fail");
+    }
+
+    return this;
+}
